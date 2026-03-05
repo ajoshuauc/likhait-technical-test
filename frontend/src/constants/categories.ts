@@ -1,18 +1,6 @@
 /**
- * Expense category constants
+ * Category constants are now loaded from the API.
+ * This file is kept for backward compatibility only.
+ * Use fetchCategories() from services/api.ts instead.
  */
-
-export const EXPENSE_CATEGORIES = [
-  "Food",
-  "Transportation",
-  "Entertainment",
-  "Shopping",
-  "Bills",
-  "Healthcare",
-  "Education",
-  "Travel",
-  "Personal",
-  "Other",
-] as const;
-
-export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+export {};
