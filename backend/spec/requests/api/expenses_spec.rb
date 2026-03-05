@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe "Api::Expenses", type: :request do
   let!(:food_category) { Category.create!(name: "Food") }
-  let!(:transport_category) { Category.create!(name: "Transport") }
+  let!(:transport_category) { Category.create!(name: "Transport", emoji: "🚗") }
 
   describe "GET /api/expenses" do
   let!(:expense1) { Expense.create!(description: "Lunch", amount: 100.00, category: food_category, date: Date.today) }
@@ -14,6 +14,9 @@ RSpec.describe "Api::Expenses", type: :request do
       expect(response).to have_http_status(:success)
       json = JSON.parse(response.body)
       expect(json.length).to eq(2)
+
+      first = json.first
+      expect(first["category_emoji"]).to be_present
     end
 
     it "returns expenses in descending order by created_at" do
@@ -47,6 +50,7 @@ RSpec.describe "Api::Expenses", type: :request do
         json = JSON.parse(response.body)
         expect(json["description"]).to eq("Team Lunch")
         expect(json["amount"]).to eq("150.5")
+        expect(json["category_emoji"]).to eq(food_category.emoji_with_fallback)
       end
     end
 

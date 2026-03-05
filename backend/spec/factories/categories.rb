@@ -1,5 +1,6 @@
 FactoryBot.define do
   factory :category do
-    name { "MyString" }
+    sequence(:name) { |n| "Category #{n}" }
+    emoji { "📦" }
   end
 end
