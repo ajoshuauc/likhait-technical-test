@@ -12,7 +12,7 @@ class Api::ExpensesController < ApplicationController
       end_date   = start_date.end_of_month
 
       expenses = expenses.where(date: start_date.beginning_of_day..end_date.end_of_day)
-  end
+    end
 
     # Order by expense date descending, then created_at descending as a tie-breaker
     expenses = expenses.order(date: :desc, created_at: :desc)
