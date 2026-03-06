@@ -1,17 +1,23 @@
 class Api::ExpensesController < ApplicationController
   def index
-    expenses = Expense.includes(:category).order(created_at: :desc)
+    # Base query: include category for eager loading
+    expenses = Expense.includes(:category)
 
+    # Filter by year & month using the 'date' column
     if params[:year].present? && params[:month].present?
-      year = params[:year].to_i
+      year  = params[:year].to_i
       month = params[:month].to_i
 
       start_date = Date.new(year, month, 1)
-      end_date = start_date.end_of_month
+      end_date   = start_date.end_of_month
 
-      expenses = expenses.where(created_at: start_date.beginning_of_day..end_date.end_of_day)
+      expenses = expenses.where(date: start_date.beginning_of_day..end_date.end_of_day)
     end
 
+    # Order by expense date descending, then created_at descending as a tie-breaker
+    expenses = expenses.order(date: :desc, created_at: :desc)
+
+    # Render JSON using your formatting method
     render json: expenses.map { |expense| format_expense(expense) }
   end
 

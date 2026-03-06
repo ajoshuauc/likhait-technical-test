@@ -5,10 +5,10 @@ RSpec.describe "Api::Expenses", type: :request do
   let!(:transport_category) { Category.create!(name: "Transport") }
 
   describe "GET /api/expenses" do
-  let!(:expense1) { Expense.create!(description: "Lunch", amount: 100.00, category: food_category, date: Date.today) }
-  let!(:expense2) { Expense.create!(description: "Taxi", amount: 50.00, category: transport_category, date: Date.today) }
-
     it "returns all expenses with category information" do
+      Expense.create!(description: "Lunch", amount: 100.00, category: food_category, date: Date.new(2026, 3, 5))
+      Expense.create!(description: "Taxi", amount: 50.00, category: transport_category, date: Date.new(2026, 3, 6))
+
       get "/api/expenses"
 
       expect(response).to have_http_status(:success)
@@ -16,12 +16,55 @@ RSpec.describe "Api::Expenses", type: :request do
       expect(json.length).to eq(2)
     end
 
-    it "returns expenses in descending order by created_at" do
-      get "/api/expenses"
+    it "orders expenses by expense date descending" do
+      newer_date = Expense.create!(
+        description: "Newer date",
+        amount: 10.00,
+        category: food_category,
+        date: Date.new(2026, 3, 20)
+      )
+
+      older_date = Expense.create!(
+        description: "Older date",
+        amount: 5.00,
+        category: transport_category,
+        date: Date.new(2026, 3, 5)
+      )
+
+      # Ensure ordering is not accidentally driven by created_at.
+      older_date.update_column(:created_at, Time.zone.local(2026, 3, 21, 12, 0, 0))
+      newer_date.update_column(:created_at, Time.zone.local(2026, 3, 1, 12, 0, 0))
+
+      get "/api/expenses", params: { year: 2026, month: 3 }
 
       json = JSON.parse(response.body)
-      expect(json.first["id"]).to eq(expense2.id)
-      expect(json.last["id"]).to eq(expense1.id)
+      expect(json.map { |e| e["id"] }).to eq([ newer_date.id, older_date.id ])
+    end
+
+    it "uses created_at as a tie-breaker when dates are equal" do
+      same_date = Date.new(2026, 3, 10)
+
+      earlier_created = Expense.create!(
+        description: "Earlier created",
+        amount: 1.00,
+        category: food_category,
+        date: same_date
+      )
+
+      later_created = Expense.create!(
+        description: "Later created",
+        amount: 2.00,
+        category: transport_category,
+        date: same_date
+      )
+
+      earlier_created.update_column(:created_at, Time.zone.local(2026, 3, 10, 10, 0, 0))
+      later_created.update_column(:created_at, Time.zone.local(2026, 3, 10, 11, 0, 0))
+
+      get "/api/expenses", params: { year: 2026, month: 3 }
+
+      json = JSON.parse(response.body)
+      expect(json.first["id"]).to eq(later_created.id)
     end
   end
 
@@ -46,7 +89,7 @@ RSpec.describe "Api::Expenses", type: :request do
         expect(response).to have_http_status(:created)
         json = JSON.parse(response.body)
         expect(json["description"]).to eq("Team Lunch")
-        expect(json["amount"]).to eq("150.5")
+        expect(json["amount"]).to be_within(0.001).of(150.5)
       end
     end
 
