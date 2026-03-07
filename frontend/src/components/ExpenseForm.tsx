@@ -2,17 +2,19 @@
  * Form component for adding/editing expenses
  */
 
-import React from "react";
-import { ExpenseFormData } from "../types";
-import { EXPENSE_CATEGORIES } from "../constants/categories";
+import React, { useState } from "react";
+import { ExpenseFormData, Category } from "../types";
 import { TextField, SelectBox, Button } from "../vibes";
 import { useExpenseForm } from "../hooks/useExpenseForm";
+import { AddCategoryModal } from "./AddCategoryModal";
 
 interface ExpenseFormProps {
   initialData?: Partial<ExpenseFormData>;
   onSubmit: (data: ExpenseFormData) => Promise<void>;
   onCancel?: () => void;
   submitLabel?: string;
+  categories: Category[];
+  onCategoryCreated: (category: Category) => void;
 }
 
 export function ExpenseForm({
@@ -20,12 +22,16 @@ export function ExpenseForm({
   onSubmit,
   onCancel,
   submitLabel = "Add Expense",
+  categories,
+  onCategoryCreated,
 }: ExpenseFormProps) {
   const { formData, errors, isSubmitting, handleChange, handleSubmit } =
     useExpenseForm({
       initialData,
       onSubmit,
     });
+
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
   const formStyle: React.CSSProperties = {
     display: "flex",
@@ -39,10 +45,27 @@ export function ExpenseForm({
     marginTop: "0.5rem",
   };
 
-  const categoryOptions = EXPENSE_CATEGORIES.map((category) => ({
-    value: category,
-    label: category,
-  }));
+  const categoryOptions = [
+    ...categories.map((cat) => ({
+      value: cat.name,
+      label: `${cat.emoji || "📦"} ${cat.name}`,
+    })),
+    { value: "__add_new__", label: "+ Add new category" },
+  ];
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value === "__add_new__") {
+      setShowAddCategory(true);
+      return;
+    }
+    handleChange("category", e.target.value);
+  };
+
+  const handleCategoryCreated = (category: Category) => {
+    onCategoryCreated(category);
+    handleChange("category", category.name);
+    setShowAddCategory(false);
+  };
 
   return (
     <form onSubmit={handleSubmit} style={formStyle}>
@@ -73,7 +96,7 @@ export function ExpenseForm({
         label="Category"
         options={categoryOptions}
         value={formData.category}
-        onChange={(e) => handleChange("category", e.target.value)}
+        onChange={handleCategoryChange}
         error={errors.category}
         fullWidth
         required
@@ -109,6 +132,13 @@ export function ExpenseForm({
           </Button>
         )}
       </div>
+
+      <AddCategoryModal
+        isOpen={showAddCategory}
+        onClose={() => setShowAddCategory(false)}
+        onCreated={handleCategoryCreated}
+        existingCategories={categories}
+      />
     </form>
   );
 }

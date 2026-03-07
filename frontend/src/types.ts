@@ -7,9 +7,16 @@ export interface Expense {
   amount: number;
   description: string;
   category: string;
+  category_emoji?: string;
   date: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  emoji: string | null;
 }
 
 export interface ExpenseFormData {

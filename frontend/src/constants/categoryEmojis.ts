@@ -1,8 +1,8 @@
 /**
- * Emoji mappings for expense categories
+ * Fallback emoji mappings for expense categories
  */
 
-export const CATEGORY_EMOJIS: Record<string, string> = {
+const FALLBACK_EMOJIS: Record<string, string> = {
   Food: "🍔",
   Transportation: "🚗",
   Entertainment: "🎬",
@@ -14,6 +14,15 @@ export const CATEGORY_EMOJIS: Record<string, string> = {
   Other: "📦",
 };
 
-export function getCategoryEmoji(category: string): string {
-  return CATEGORY_EMOJIS[category] || "📦";
+export const DEFAULT_EMOJI = "📦";
+
+export function getCategoryEmoji(
+  categoryOrName: string | { emoji?: string | null; name?: string },
+): string {
+  if (typeof categoryOrName === "string") {
+    return FALLBACK_EMOJIS[categoryOrName] || DEFAULT_EMOJI;
+  }
+  return (
+    categoryOrName.emoji || FALLBACK_EMOJIS[categoryOrName.name || ""] || DEFAULT_EMOJI
+  );
 }

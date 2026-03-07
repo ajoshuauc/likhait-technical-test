@@ -1,6 +1,6 @@
 class Api::ExpensesController < ApplicationController
   def index
-    expenses = Expense.includes(:category).order(created_at: :desc)
+    expenses = Expense.includes(:category).order(created_at: :desc, id: :desc)
 
     if params[:year].present? && params[:month].present?
       year = params[:year].to_i
@@ -48,11 +48,19 @@ class Api::ExpensesController < ApplicationController
   end
 
   def format_expense(expense)
+    amount = expense.amount
+    amount_string = if amount.is_a?(BigDecimal)
+      amount.to_s("F")
+    else
+      amount.to_s
+    end
+
     {
       id: expense.id,
       description: expense.description,
-      amount: expense.amount.to_f,
+      amount: amount_string,
       category: expense.category.name,
+      category_emoji: expense.category.emoji_with_fallback,
       date: expense.date.to_s,
       created_at: expense.created_at,
       updated_at: expense.updated_at
