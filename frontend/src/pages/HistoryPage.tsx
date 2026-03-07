@@ -166,7 +166,7 @@ const HistoryPage: React.FC = () => {
     <div style={pageStyle}>
       <div style={headerStyle}>
         <div style={leftHeaderStyle}>
-          <h1 style={titleStyle}>Expense Historys</h1>
+          <h1 style={titleStyle}>Expense History</h1>
           <YearNavigation
             currentYear={selectedYear}
             onYearChange={handleYearChange}
